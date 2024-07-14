@@ -1,0 +1,32 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Microsoft/azure-pipelines-task-lib/master/tasks.schema.json",
+    "id": "13a0f8db-81f2-47ee-a03a-66448eb71d11",
+    "name": "SbomGen",
+    "friendlyName": "SbomGen",
+    "description": "Custom Azure DevOps pipeline task extension to generate SBOM report",
+    "helpMarkDown": "",
+    "category": "Utility",
+    "visibility": ["Build", "Release"],
+    "author": "ViktorBovzdarenko",
+    "version": {
+        "Major": 1,
+        "Minor": 0,
+        "Patch": 0
+    },
+    "instanceNameFormat": "SBOM Gen $(samplestring)",
+    "inputs": [
+        {
+            "name": "samplestring",
+            "type": "string",
+            "label": "Sample String",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "A sample string"
+        }
+    ],
+    "execution": {
+        "Node10": {
+            "target": "index.js"
+        }
+    }
+}
