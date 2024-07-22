@@ -1,8 +1,8 @@
 {
     "manifestVersion": 1,
-    "id": "build-release-task",
+    "id": "sbom-gen-task",
     "name": "SbomGen",
-    "version": "0.0.2",
+    "version": "0.0.5",
     "publisher": "ViktorBovzdarenko",
     "targets": [
         {
@@ -16,6 +16,14 @@
     "icons": {
         "default": "images/extension-icon.png"        
     },
+    "content": {
+        "details": {
+            "path": "overview.md"
+        },
+        "license": {
+            "path": "license-terms.md"
+        }
+    }, 
     "files": [
         {
             "path": "buildAndReleaseTask"

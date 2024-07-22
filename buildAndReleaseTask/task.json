@@ -2,26 +2,28 @@
     "$schema": "https://raw.githubusercontent.com/Microsoft/azure-pipelines-task-lib/master/tasks.schema.json",
     "id": "13a0f8db-81f2-47ee-a03a-66448eb71d11",
     "name": "SbomGen",
-    "friendlyName": "SbomGen",
-    "description": "Custom Azure DevOps pipeline task extension to generate SBOM report",
+    "friendlyName": "SBOM report",
+    "description": "Custom Azure DevOps pipeline task extension to collect a list of dependencies and generate Software bill of materials (SBOM) report in HTML format.",
+    "author": "ViktorBovzdarenko",
+    "instanceNameFormat": "SBOM Generation",
     "helpMarkDown": "",
     "category": "Utility",
     "visibility": ["Build", "Release"],
-    "author": "ViktorBovzdarenko",
+   
     "version": {
         "Major": 1,
         "Minor": 0,
         "Patch": 0
     },
-    "instanceNameFormat": "SBOM Gen $(samplestring)",
+    
     "inputs": [
         {
-            "name": "samplestring",
+            "name": "reportoutputname",
             "type": "string",
-            "label": "Sample String",
-            "defaultValue": "",
+            "label": "Report output name",
+            "defaultValue": "SBOM.HTML",
             "required": true,
-            "helpMarkDown": "A sample string"
+            "helpMarkDown": "Output file name for SBOM report with extension (e.g. SBOM.HTML, SBOM.XML, SBOM.JSON, SBOM.CSV)."
         }
     ],
     "execution": {

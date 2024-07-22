@@ -35,19 +35,62 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var tl = require("azure-pipelines-task-lib/task");
+var child_process_1 = require("child_process");
+var fs_1 = __importDefault(require("fs"));
+var path_1 = __importDefault(require("path"));
 function run() {
     return __awaiter(this, void 0, void 0, function () {
-        var inputString;
+        var solution_1, outputDirectory_1;
         return __generator(this, function (_a) {
             try {
-                inputString = tl.getInput('samplestring', true);
-                if (inputString == 'bad') {
-                    tl.setResult(tl.TaskResult.Failed, 'Bad input was given');
-                    return [2 /*return*/];
-                }
-                console.log('Hello', inputString);
+                solution_1 = tl.getPathInput('solution', true, true);
+                outputDirectory_1 = tl.getVariable('build.artifactstagingdirectory');
+                console.log('solution: ' + solution_1);
+                console.log('outputDirectory: ' + outputDirectory_1);
+                // Install CycloneDX tool
+                console.log('Installing CycloneDX tool...');
+                (0, child_process_1.exec)('dotnet tool install --global CycloneDX', function (err, stdout, stderr) {
+                    if (err) {
+                        tl.setResult(tl.TaskResult.Failed, "Failed to install CycloneDX tool: ".concat(stderr));
+                        return;
+                    }
+                    console.log(stdout);
+                    // Execute CycloneDX
+                    var command = "dotnet CycloneDX ".concat(solution_1, " --output ").concat(outputDirectory_1, " --json");
+                    console.log("Executing: ".concat(command));
+                    (0, child_process_1.exec)(command, function (err, stdout, stderr) {
+                        if (err) {
+                            tl.setResult(tl.TaskResult.Failed, "Failed to execute CycloneDX tool: ".concat(stderr));
+                            return;
+                        }
+                        console.log(stdout);
+                        // Read JSON output
+                        var jsonOutputPath = path_1.default.join(outputDirectory_1, 'bom.json');
+                        fs_1.default.readFile(jsonOutputPath, 'utf8', function (err, data) {
+                            if (err) {
+                                tl.setResult(tl.TaskResult.Failed, "Failed to read JSON output: ".concat(err.message));
+                                return;
+                            }
+                            var jsonData = JSON.parse(data);
+                            // Convert JSON to HTML
+                            var htmlContent = "\n                    <!DOCTYPE html>\n                    <html lang=\"en\">\n                    <head>\n                        <meta charset=\"UTF-8\">\n                        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n                        <title>CycloneDX Report</title>\n                    </head>\n                    <body>\n                        <h1>CycloneDX Report</h1>\n                        <pre>".concat(JSON.stringify(jsonData, null, 2), "</pre>\n                    </body>\n                    </html>");
+                            var htmlOutputPath = path_1.default.join(outputDirectory_1, 'bom.html');
+                            fs_1.default.writeFile(htmlOutputPath, htmlContent, 'utf8', function (err) {
+                                if (err) {
+                                    tl.setResult(tl.TaskResult.Failed, "Failed to write HTML output: ".concat(err.message));
+                                    return;
+                                }
+                                console.log("HTML report generated at: ".concat(htmlOutputPath));
+                                tl.setResult(tl.TaskResult.Succeeded, 'CycloneDX analysis completed successfully.');
+                            });
+                        });
+                    });
+                });
             }
             catch (err) {
                 tl.setResult(tl.TaskResult.Failed, err.message);
