@@ -18,6 +18,14 @@
     
     "inputs": [
         {
+            "name": "solution",
+            "type": "filePath",
+            "label": "Solution file",
+            "defaultValue": "$(System.DefaultWorkingDirectory)/InsecureApplication.sln",
+            "required": true,
+            "helpMarkDown": "Path to the solution file to be analyzed."
+        },
+        {
             "name": "reportoutputname",
             "type": "string",
             "label": "Report output name",

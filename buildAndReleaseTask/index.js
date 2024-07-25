@@ -45,13 +45,20 @@ var fs_1 = __importDefault(require("fs"));
 var path_1 = __importDefault(require("path"));
 function run() {
     return __awaiter(this, void 0, void 0, function () {
-        var solution_1, outputDirectory_1;
+        var workingDirectory, outputDirectory_1, solution_1;
         return __generator(this, function (_a) {
             try {
-                solution_1 = tl.getPathInput('solution', true, true);
+                workingDirectory = tl.getVariable('System.DefaultWorkingDirectory');
                 outputDirectory_1 = tl.getVariable('build.artifactstagingdirectory');
-                console.log('solution: ' + solution_1);
-                console.log('outputDirectory: ' + outputDirectory_1);
+                // Find the .sln file in the working directory
+                console.log('Searching for .sln file...');
+                solution_1 = findSolutionFile(workingDirectory);
+                if (!solution_1) {
+                    tl.setResult(tl.TaskResult.Failed, 'No .sln file found in the working directory.');
+                    return [2 /*return*/];
+                }
+                console.log("Solution file path: ".concat(solution_1));
+                console.log("Output directory: ".concat(outputDirectory_1));
                 // Install CycloneDX tool
                 console.log('Installing CycloneDX tool...');
                 (0, child_process_1.exec)('dotnet tool install --global CycloneDX', function (err, stdout, stderr) {
@@ -98,5 +105,22 @@ function run() {
             return [2 /*return*/];
         });
     });
+}
+// Helper function to find the solution file
+function findSolutionFile(directory) {
+    var files = fs_1.default.readdirSync(directory);
+    for (var _i = 0, files_1 = files; _i < files_1.length; _i++) {
+        var file = files_1[_i];
+        var fullPath = path_1.default.join(directory, file);
+        if (fs_1.default.statSync(fullPath).isDirectory()) {
+            var result = findSolutionFile(fullPath);
+            if (result)
+                return result;
+        }
+        else if (file.endsWith('.sln')) {
+            return fullPath;
+        }
+    }
+    return null;
 }
 run();
