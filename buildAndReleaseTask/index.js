@@ -45,59 +45,27 @@ var fs_1 = __importDefault(require("fs"));
 var path_1 = __importDefault(require("path"));
 function run() {
     return __awaiter(this, void 0, void 0, function () {
-        var workingDirectory, outputDirectory_1, solution_1;
+        var workingDirectory, outputDirectory, solution, jsonOutputPath, htmlOutputPath;
         return __generator(this, function (_a) {
             try {
                 workingDirectory = tl.getVariable('System.DefaultWorkingDirectory');
-                outputDirectory_1 = tl.getVariable('build.artifactstagingdirectory');
+                outputDirectory = tl.getVariable('build.artifactstagingdirectory');
                 // Find the .sln file in the working directory
                 console.log('Searching for .sln file...');
-                solution_1 = findSolutionFile(workingDirectory);
-                if (!solution_1) {
+                solution = findSolutionFile(workingDirectory);
+                if (!solution) {
                     tl.setResult(tl.TaskResult.Failed, 'No .sln file found in the working directory.');
                     return [2 /*return*/];
                 }
-                console.log("Solution file path: ".concat(solution_1));
-                console.log("Output directory: ".concat(outputDirectory_1));
-                // Install CycloneDX tool
-                console.log('Installing CycloneDX tool...');
-                (0, child_process_1.exec)('dotnet tool install --global CycloneDX', function (err, stdout, stderr) {
-                    if (err) {
-                        tl.setResult(tl.TaskResult.Failed, "Failed to install CycloneDX tool: ".concat(stderr));
-                        return;
-                    }
-                    console.log(stdout);
-                    // Execute CycloneDX
-                    var command = "dotnet CycloneDX ".concat(solution_1, " --output ").concat(outputDirectory_1, " --json");
-                    console.log("Executing: ".concat(command));
-                    (0, child_process_1.exec)(command, function (err, stdout, stderr) {
-                        if (err) {
-                            tl.setResult(tl.TaskResult.Failed, "Failed to execute CycloneDX tool: ".concat(stderr));
-                            return;
-                        }
-                        console.log(stdout);
-                        // Read JSON output
-                        var jsonOutputPath = path_1.default.join(outputDirectory_1, 'bom.json');
-                        fs_1.default.readFile(jsonOutputPath, 'utf8', function (err, data) {
-                            if (err) {
-                                tl.setResult(tl.TaskResult.Failed, "Failed to read JSON output: ".concat(err.message));
-                                return;
-                            }
-                            var jsonData = JSON.parse(data);
-                            // Convert JSON to HTML
-                            var htmlContent = "\n                    <!DOCTYPE html>\n                    <html lang=\"en\">\n                    <head>\n                        <meta charset=\"UTF-8\">\n                        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n                        <title>CycloneDX Report</title>\n                    </head>\n                    <body>\n                        <h1>CycloneDX Report</h1>\n                        <pre>".concat(JSON.stringify(jsonData, null, 2), "</pre>\n                    </body>\n                    </html>");
-                            var htmlOutputPath = path_1.default.join(outputDirectory_1, 'bom.html');
-                            fs_1.default.writeFile(htmlOutputPath, htmlContent, 'utf8', function (err) {
-                                if (err) {
-                                    tl.setResult(tl.TaskResult.Failed, "Failed to write HTML output: ".concat(err.message));
-                                    return;
-                                }
-                                console.log("HTML report generated at: ".concat(htmlOutputPath));
-                                tl.setResult(tl.TaskResult.Succeeded, 'CycloneDX analysis completed successfully.');
-                            });
-                        });
-                    });
-                });
+                console.log("Solution file path: ".concat(solution));
+                console.log("Output directory: ".concat(outputDirectory));
+                jsonOutputPath = getSbomJsonFromCycloneDXApp(solution, outputDirectory);
+                if (!jsonOutputPath) {
+                    tl.setResult(tl.TaskResult.Failed, "Failed to install CycloneDX and run tool to get the output SBOM.json");
+                    return [2 /*return*/];
+                }
+                htmlOutputPath = getHTMLFileFromJson(jsonOutputPath, outputDirectory);
+                tl.setResult(tl.TaskResult.Succeeded, "SBOM analysis completed successfully. SBOM HTML report generated at: ".concat(htmlOutputPath));
             }
             catch (err) {
                 tl.setResult(tl.TaskResult.Failed, err.message);
@@ -121,6 +89,56 @@ function findSolutionFile(directory) {
             return fullPath;
         }
     }
+    return null;
+}
+// Helper function to download and execute CycloneDX application.
+//Returns: full path to the SBOM report
+function getSbomJsonFromCycloneDXApp(solutionName, outputDirectory) {
+    // Install CycloneDX tool
+    console.log('Installing CycloneDX tool...');
+    (0, child_process_1.exec)('dotnet tool install --global CycloneDX', function (err, stdout, stderr) {
+        if (err) {
+            tl.setResult(tl.TaskResult.Failed, "Failed to install CycloneDX tool: ".concat(stderr));
+            return;
+        }
+        console.log(stdout);
+        // Execute CycloneDX
+        var command = "dotnet CycloneDX ".concat(solutionName, " --output ").concat(outputDirectory, " --json");
+        console.log("Executing: ".concat(command));
+        (0, child_process_1.exec)(command, function (err, stdout, stderr) {
+            if (err) {
+                tl.setResult(tl.TaskResult.Failed, "Failed to execute CycloneDX tool: ".concat(stderr));
+                return;
+            }
+            console.log(stdout);
+            // Read JSON output
+            var jsonOutputPath = path_1.default.join(outputDirectory, 'bom.json');
+            console.log('Installing CycloneDX tool...');
+            return jsonOutputPath;
+        });
+    });
+    return null;
+}
+// Helper function to convert JSON to HTML 
+function getHTMLFileFromJson(jsonInputPath, outputDirectory) {
+    fs_1.default.readFile(jsonInputPath, 'utf8', function (err, data) {
+        if (err) {
+            tl.setResult(tl.TaskResult.Failed, "Failed to read JSON output: ".concat(err.message));
+            return;
+        }
+        var jsonData = JSON.parse(data);
+        // Convert JSON to HTML
+        var htmlContent = "\n        <!DOCTYPE html>\n        <html lang=\"en\">\n        <head>\n            <meta charset=\"UTF-8\">\n            <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n            <title>CycloneDX Report</title>\n        </head>\n        <body>\n            <h1>CycloneDX Report</h1>\n            <pre>".concat(JSON.stringify(jsonData, null, 2), "</pre>\n        </body>\n        </html>");
+        var htmlOutputPath = path_1.default.join(outputDirectory, 'bom.html');
+        fs_1.default.writeFile(htmlOutputPath, htmlContent, 'utf8', function (err) {
+            if (err) {
+                tl.setResult(tl.TaskResult.Failed, "Failed to write HTML output: ".concat(err.message));
+                return;
+            }
+            console.log("HTML report generated at: ".concat(htmlOutputPath));
+        });
+        return htmlOutputPath;
+    });
     return null;
 }
 run();

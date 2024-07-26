@@ -18,20 +18,20 @@
     
     "inputs": [
         {
-            "name": "solution",
-            "type": "filePath",
-            "label": "Solution file",
-            "defaultValue": "$(System.DefaultWorkingDirectory)/InsecureApplication.sln",
-            "required": true,
-            "helpMarkDown": "Path to the solution file to be analyzed."
-        },
-        {
             "name": "reportoutputname",
             "type": "string",
-            "label": "Report output name",
-            "defaultValue": "SBOM.HTML",
+            "label": "Report Output Names",
+            "defaultValue": "SBOM.JSON, SBOM.HTML, SBOM.CSV",
             "required": true,
             "helpMarkDown": "Output file name for SBOM report with extension (e.g. SBOM.HTML, SBOM.XML, SBOM.JSON, SBOM.CSV)."
+        },
+        {
+            "name": "includeColumns",
+            "type": "string",
+            "label": "Include Columns",
+            "defaultValue": "Name, Author, Licnese, Description, Used Version, Used Version Vulnerabilities, Last Version, Last Version Vulnerabilities, Advised Action",
+            "required": true,
+            "helpMarkDown": "List of the column names to use for SBOM report (Name, Author, Licnese, Description, Used Version, Used Version Vulnerabilities, Last Version, Last Version Vulnerabilities, Advised Action). These placeholders are resolved in a dependency specific value."
         }
     ],
     "execution": {
