@@ -39,65 +39,39 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getSbom = void 0;
 var tl = require("azure-pipelines-task-lib/task");
-var cycloneDxAgent_1 = require("./src/agents/cycloneDxAgent");
-var htmlProducer_1 = require("./src/producers/htmlProducer");
-var fs_1 = __importDefault(require("fs"));
+var child_process_1 = require("child_process");
 var path_1 = __importDefault(require("path"));
-function run() {
+function getSbom(solutionName, outputDirectory) {
     return __awaiter(this, void 0, void 0, function () {
-        var reportoutputname, includeColumns, workingDirectory, outputDirectory, solution, jsonOutputPath, htmlOutputPath, err_1;
         return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    _a.trys.push([0, 2, , 3]);
-                    reportoutputname = tl.getInput('reportoutputname', true);
-                    includeColumns = tl.getInput('includeColumns', true);
-                    workingDirectory = tl.getVariable('System.DefaultWorkingDirectory');
-                    outputDirectory = tl.getVariable('build.artifactstagingdirectory');
-                    // Find the .sln file in the working directory
-                    console.log('Searching for .sln file...');
-                    solution = findSolutionFile(workingDirectory);
-                    if (!solution) {
-                        tl.setResult(tl.TaskResult.Failed, 'No .sln file found in the working directory.');
-                        return [2 /*return*/];
-                    }
-                    console.log("Solution file path: ".concat(solution));
-                    console.log("Output directory: ".concat(outputDirectory));
-                    return [4 /*yield*/, (0, cycloneDxAgent_1.getSbom)(solution, outputDirectory)];
-                case 1:
-                    jsonOutputPath = _a.sent();
-                    if (!jsonOutputPath) {
-                        tl.setResult(tl.TaskResult.Failed, "Failed to install CycloneDX and run tool to get the output SBOM.json");
-                        return [2 /*return*/];
-                    }
-                    htmlOutputPath = (0, htmlProducer_1.convertToHTML)(jsonOutputPath, outputDirectory);
-                    tl.setResult(tl.TaskResult.Succeeded, "SBOM analysis completed successfully. SBOM HTML report generated at: ".concat(htmlOutputPath));
-                    return [3 /*break*/, 3];
-                case 2:
-                    err_1 = _a.sent();
-                    tl.setResult(tl.TaskResult.Failed, err_1.message);
-                    return [3 /*break*/, 3];
-                case 3: return [2 /*return*/];
-            }
+            console.log('Installing CycloneDX tool...');
+            return [2 /*return*/, new Promise(function (resolve, reject) {
+                    (0, child_process_1.exec)('dotnet tool install --global CycloneDX', function (err, stdout, stderr) {
+                        if (err) {
+                            tl.setResult(tl.TaskResult.Failed, "Unable to install CycloneDX tool: ".concat(stderr));
+                            return reject(err);
+                        }
+                        console.log(stdout);
+                        var jsonOutputName = 'SBOM.json';
+                        // Execute CycloneDX
+                        var command = "dotnet CycloneDX ".concat(solutionName, " --output ").concat(outputDirectory, " --filename ").concat(jsonOutputName, " --json");
+                        console.log("Executing: ".concat(command));
+                        (0, child_process_1.exec)(command, function (err, stdout, stderr) {
+                            if (err) {
+                                tl.setResult(tl.TaskResult.Failed, "Unable to execute CycloneDX tool: ".concat(stderr));
+                                return reject(err);
+                            }
+                            console.log(stdout);
+                            // Read JSON output
+                            var jsonOutputPath = path_1.default.join(outputDirectory, jsonOutputName);
+                            console.log("Produced SBOM with CycloneDX tool: ".concat(jsonOutputPath));
+                            resolve(jsonOutputPath);
+                        });
+                    });
+                })];
         });
     });
 }
-// Helper function to find the solution file
-function findSolutionFile(directory) {
-    var files = fs_1.default.readdirSync(directory);
-    for (var _i = 0, files_1 = files; _i < files_1.length; _i++) {
-        var file = files_1[_i];
-        var fullPath = path_1.default.join(directory, file);
-        if (fs_1.default.statSync(fullPath).isDirectory()) {
-            var result = findSolutionFile(fullPath);
-            if (result)
-                return result;
-        }
-        else if (file.endsWith('.sln')) {
-            return fullPath;
-        }
-    }
-    return null;
-}
-run();
+exports.getSbom = getSbom;
