@@ -21,7 +21,7 @@
             "name": "reportoutputname",
             "type": "string",
             "label": "Report Output Names",
-            "defaultValue": "SBOM.JSON, SBOM.HTML, SBOM.CSV",
+            "defaultValue": "SBOM.HTML",
             "required": true,
             "helpMarkDown": "Output file name for SBOM report with extension (e.g. SBOM.HTML, SBOM.XML, SBOM.JSON, SBOM.CSV)."
         },

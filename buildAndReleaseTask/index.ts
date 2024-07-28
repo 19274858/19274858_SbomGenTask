@@ -9,7 +9,7 @@ import path from 'path';
 async function run() {
     try {
         // Get the working directory
-        const reportoutputname: string = tl.getInput('reportoutputname', true)!;
+        const reportOutputNames: string = tl.getInput('reportoutputname', true)!;
         const includeColumns: string = tl.getInput('includeColumns', true)!;
         const workingDirectory: string = tl.getVariable('System.DefaultWorkingDirectory')!;
         const outputDirectory: string = tl.getVariable('build.artifactstagingdirectory')!;
@@ -29,11 +29,14 @@ async function run() {
         if (!jsonOutputPath) {
             tl.setResult(tl.TaskResult.Failed, `Failed to install CycloneDX and run tool to get the output SBOM.json`);
             return;
-        }
-        
-        const htmlOutputPath = convertToHTML(jsonOutputPath, outputDirectory);   
+        }        
+        const reportOutputNamesArray: string[] = reportOutputNames.split(',');
 
-        tl.setResult(tl.TaskResult.Succeeded, `SBOM analysis completed successfully. SBOM HTML report generated at: ${htmlOutputPath}`);
+        reportOutputNamesArray.forEach((reportOutputName: string) => {
+            const htmlOutputPath = convertToHTML(jsonOutputPath, outputDirectory, reportOutputName);   
+        });
+       
+        tl.setResult(tl.TaskResult.Succeeded, `SBOM analysis completed successfully. SBOM reports generated at: ${outputDirectory}`);
         
     } catch (err) {
         tl.setResult(tl.TaskResult.Failed, (err as Error).message);

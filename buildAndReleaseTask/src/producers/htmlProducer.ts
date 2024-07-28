@@ -1,7 +1,10 @@
 import tl = require('azure-pipelines-task-lib/task');
 import fs from 'fs';
+import path from 'path';
 
-export function convertToHTML(jsonInputPath: string, htmlOutputPath: string): void {
+export function convertToHTML(jsonInputPath: string, htmloutputDirectory: string, htmlOutputName: string): void {
+    
+    const htmlOutputPath = path.join(htmloutputDirectory, htmlOutputName);
     fs.readFile(jsonInputPath, 'utf8', (err, data) => {
         if (err) {
             tl.setResult(tl.TaskResult.Failed, `Unable to read JSON output: ${err.message}`);
