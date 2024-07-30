@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const tl = require("azure-pipelines-task-lib/task");
 const cycloneDxAgent_1 = require("./src/agents/cycloneDxAgent");
+const githubVulnerabilityProvider_1 = require("./src/providers/githubVulnerabilityProvider");
 const htmlProducer_1 = require("./src/producers/htmlProducer");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
@@ -37,12 +38,17 @@ function run() {
             // Install and run CycloneDX tool
             const jsonOutputPath = yield (0, cycloneDxAgent_1.getSbom)(solution, outputDirectory);
             if (!jsonOutputPath) {
-                tl.setResult(tl.TaskResult.Failed, `Failed to install CycloneDX and run tool to get the output SBOM.json`);
+                tl.setResult(tl.TaskResult.Failed, `Unable to install CycloneDX and run tool to get the output SBOM.json`);
+                return;
+            }
+            const vulnerabilityInfoJsonPath = yield (0, githubVulnerabilityProvider_1.getVulnerabilityInfo)(jsonOutputPath, outputDirectory, 'SBOM_NUGET_API.json');
+            if (!vulnerabilityInfoJsonPath) {
+                tl.setResult(tl.TaskResult.Failed, `Unable to get the vulnerability information`);
                 return;
             }
             const reportOutputNamesArray = reportOutputNames.split(',');
             reportOutputNamesArray.forEach((reportOutputName) => {
-                const htmlOutputPath = (0, htmlProducer_1.convertToHTML)(jsonOutputPath, outputDirectory, reportOutputName);
+                const htmlOutputPath = (0, htmlProducer_1.convertToHTML)(vulnerabilityInfoJsonPath, outputDirectory, reportOutputName);
             });
             tl.setResult(tl.TaskResult.Succeeded, `SBOM analysis completed successfully. SBOM reports generated at: ${outputDirectory}`);
         }

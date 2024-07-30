@@ -1,6 +1,6 @@
 import tl = require('azure-pipelines-task-lib/task');
 import { getSbom } from './src/agents/cycloneDxAgent';
-import { getPackageInfo } from './src/providers/githubVulnerabilityProvider';
+import { getVulnerabilityInfo} from './src/providers/githubVulnerabilityProvider';
 import { convertToHTML } from './src/producers/htmlProducer';
 import { convertToCsv } from './src/producers/csvProducer';
 import fs from 'fs';
@@ -27,13 +27,20 @@ async function run() {
         const jsonOutputPath = await getSbom(solution, outputDirectory);
         
         if (!jsonOutputPath) {
-            tl.setResult(tl.TaskResult.Failed, `Failed to install CycloneDX and run tool to get the output SBOM.json`);
+            tl.setResult(tl.TaskResult.Failed, `Unable to install CycloneDX and run tool to get the output SBOM.json`);
             return;
         }        
+        
+        const vulnerabilityInfoJsonPath: string | null = await getVulnerabilityInfo(jsonOutputPath, outputDirectory, 'SBOM_NUGET_API.json');
+
+        if (!vulnerabilityInfoJsonPath) {
+            tl.setResult(tl.TaskResult.Failed, `Unable to get the vulnerability information`);
+            return;
+        }
         const reportOutputNamesArray: string[] = reportOutputNames.split(',');
 
         reportOutputNamesArray.forEach((reportOutputName: string) => {
-            const htmlOutputPath = convertToHTML(jsonOutputPath, outputDirectory, reportOutputName);   
+            const htmlOutputPath = convertToHTML(vulnerabilityInfoJsonPath, outputDirectory, reportOutputName);   
         });
        
         tl.setResult(tl.TaskResult.Succeeded, `SBOM analysis completed successfully. SBOM reports generated at: ${outputDirectory}`);
