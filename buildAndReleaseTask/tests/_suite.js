@@ -35,7 +35,7 @@ describe('Sample task tests', function () {
         this.timeout(1000);
         let tp = path.join(__dirname, 'success.js');
         let tr = new ttm.MockTestRunner(tp);
-        tr.run();
+        tr.runAsync();
         console.log(tr.succeeded);
         assert.equal(tr.succeeded, true, 'should have succeeded');
         assert.equal(tr.warningIssues.length, 0, "should have no warnings");
@@ -48,7 +48,7 @@ describe('Sample task tests', function () {
         this.timeout(1000);
         let tp = path.join(__dirname, 'failure.js');
         let tr = new ttm.MockTestRunner(tp);
-        tr.run();
+        tr.runAsync();
         console.log(tr.succeeded);
         assert.equal(tr.succeeded, false, 'should have failed');
         assert.equal(tr.warningIssues.length, 0, "should have no warnings");
