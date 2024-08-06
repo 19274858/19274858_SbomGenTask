@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.convertToCsv = void 0;
+exports.convertToCsv = convertToCsv;
 var tl = require("azure-pipelines-task-lib/task");
 var fs_1 = __importDefault(require("fs"));
 function convertToCsv(jsonOutputPath, htmlOutputPath) {
@@ -21,4 +21,3 @@ function convertToCsv(jsonOutputPath, htmlOutputPath) {
         });
     });
 }
-exports.convertToCsv = convertToCsv;
