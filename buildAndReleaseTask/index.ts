@@ -8,6 +8,7 @@ import path from 'path';
 
 async function run() {
     try {
+        console.log(`SBOM report run started for build version 0.0.14`);
         // Get the working directory
         const reportOutputNames: string = tl.getInput('reportoutputname', true)!;
         const includeColumns: string = tl.getInput('includeColumns', true)!;

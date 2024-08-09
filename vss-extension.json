@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "sbom-gen-task",
     "name": "SbomGen",
-    "version": "0.0.13",
+    "version": "0.0.15",
     "publisher": "ViktorBovzdarenko",
     "targets": [
         {
