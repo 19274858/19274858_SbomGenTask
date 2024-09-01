@@ -1,6 +1,6 @@
 import tl = require('azure-pipelines-task-lib/task');
 import { getSbom } from './src/agents/cycloneDxAgent';
-import { getVulnerabilityInfo} from './src/providers/githubVulnerabilityProvider';
+import { getVulnerabilityInfo} from './src/providers/nuGetVulnerabilityProvider';
 import { convertToHTML } from './src/producers/htmlProducer';
 import { convertToCsv } from './src/producers/csvProducer';
 import fs from 'fs';
